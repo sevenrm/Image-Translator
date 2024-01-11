@@ -4,8 +4,6 @@ export default defineNuxtConfig({
 
   modules: ["@vueuse/nuxt", "@unocss/nuxt", "nuxt-headlessui"],
 
-  // plugins: ["~/plugins/vue-cropper.ts"],
-
   typescript: {
     strict: true,
   },

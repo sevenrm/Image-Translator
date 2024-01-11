@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import VueCropper from "vue-cropperjs";
+import "cropperjs/dist/cropper.css";
+
 const config = useRuntimeConfig();
 useHead({
   title: "Cotrans Manga Image Translator by VoileLabs",
@@ -48,6 +51,8 @@ const directions = {
 };
 const direction = useSessionStorage("trans_direction", "default");
 
+let isSelect = ref(false);
+
 const translators = {
   none: "Remove text",
   "gpt3.5": "GPT-3.5",
@@ -78,6 +83,9 @@ useEventListener(document, "paste", (e: ClipboardEvent) => {
 });
 
 const fileUri = ref("");
+
+const cropperRef = ref(null);
+
 watch(file, (file) => {
   if (fileUri.value) URL.revokeObjectURL(fileUri.value);
   fileUri.value = file ? URL.createObjectURL(file) : "";
@@ -118,6 +126,7 @@ const errorId = ref("");
 const errorStatus = ref("");
 const resultBlob = ref<Blob | null>(null);
 const status = ref("");
+
 async function upload() {
   if (!file.value) return;
 
@@ -127,6 +136,9 @@ async function upload() {
   status.value = "uploading";
 
   const formData = new FormData();
+  cropperRef.value?.getCroppedCanvas().toBlob((blob) => {
+    formData.append("file", blob);
+  });
   formData.append("file", file.value);
   formData.append("mime", file.value.type);
   formData.append("target_language", language.value);
@@ -247,6 +259,12 @@ function reset() {
   resultBlob.value = null;
   status.value = "";
 }
+
+function selectArea() {
+  console.log(isSelect.value);
+  isSelect.value = true;
+  console.log(isSelect.value);
+}
 </script>
 
 <template>
@@ -350,16 +368,18 @@ function reset() {
                 File Preview
               </div>
 
-              <!-- <img
-                :src="fileUri"
-                class="object-contain max-w-100vw sm:max-w-[calc(100vw-20rem)] sm:h-[calc(100vh-12rem)]"
-              /> -->
               <VueCropper
-                v-show="fileUri"
-                ref="cropper"
+                v-show="isSelect && fileUri"
+                ref="cropperRef"
                 :src="fileUri"
                 alt="Source Image"
+                class="object-contain max-w-100vw sm:max-w-[calc(100vw-20rem)] sm:h-[calc(100vh-12rem)]"
               ></VueCropper>
+              <img
+                v-show="!isSelect"
+                :src="fileUri"
+                class="object-contain max-w-100vw sm:max-w-[calc(100vw-20rem)] sm:h-[calc(100vh-12rem)]"
+              />
             </div>
 
             <div class="flex flex-col gap-2 pointer-events-none">
@@ -410,6 +430,7 @@ function reset() {
 
               <button
                 class="py-1 w-56 text-center rounded-full text-fuchsia-600 border border-fuchsia-300 pointer-events-auto"
+                @click.prevent="selectArea"
               >
                 Select Area
               </button>
