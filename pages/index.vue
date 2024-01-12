@@ -137,15 +137,23 @@ async function upload() {
 
   const formData = new FormData();
   cropperRef.value?.getCroppedCanvas().toBlob((blob) => {
-    formData.append("file", blob);
+    blob.name = "cropImage";
+    blob.lastModified = new Date();
+    const imgFile = new File([blob], "image.jpeg", {
+      type: blob.type,
+    });
+    console.log(typeof(imgFile));
+    formData.append("file", imgFile);
+    formData.append("mime", imgFile.type);
   });
-  formData.append("file", file.value);
-  formData.append("mime", file.value.type);
+  console.log(typeof(file.value));
   formData.append("target_language", language.value);
   formData.append("detector", detector.value);
   formData.append("direction", direction.value);
   formData.append("translator", translator.value);
   formData.append("size", size.value);
+
+  console.log(formData);
 
   const res = await $fetch<{
     id: string;
@@ -369,14 +377,14 @@ function selectArea() {
               </div>
 
               <VueCropper
-                v-show="isSelect && fileUri"
+                v-if="isSelect"
                 ref="cropperRef"
                 :src="fileUri"
                 alt="Source Image"
                 class="object-contain max-w-100vw sm:max-w-[calc(100vw-20rem)] sm:h-[calc(100vh-12rem)]"
               ></VueCropper>
               <img
-                v-show="!isSelect"
+                v-else
                 :src="fileUri"
                 class="object-contain max-w-100vw sm:max-w-[calc(100vw-20rem)] sm:h-[calc(100vh-12rem)]"
               />
